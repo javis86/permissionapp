@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PermissionApp", "PermissionApp\PermissionApp.csproj", "{54D97AAC-5332-4347-9414-35046EFD4EDD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PermissionApp.Domain", "PermissionApp.Domain\PermissionApp.Domain.csproj", "{CA5C4EA6-E510-495D-8379-5104CE667A7C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{54D97AAC-5332-4347-9414-35046EFD4EDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{54D97AAC-5332-4347-9414-35046EFD4EDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{54D97AAC-5332-4347-9414-35046EFD4EDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA5C4EA6-E510-495D-8379-5104CE667A7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA5C4EA6-E510-495D-8379-5104CE667A7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA5C4EA6-E510-495D-8379-5104CE667A7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA5C4EA6-E510-495D-8379-5104CE667A7C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

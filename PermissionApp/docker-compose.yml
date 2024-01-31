@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  
+  permission-app:
+    build:
+      context: ..
+      dockerfile: ./PermissionApp/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - sql-server
+    networks:
+      - my-network
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sql-server,1433;Database=permissiondb;User Id=sa;Password=3mlq5nXG86eL3nF;TrustServerCertificate=true
+    
+  sql-server:
+    image: mcr.microsoft.com/mssql/server
+    environment:
+      SA_PASSWORD: 3mlq5nXG86eL3nF
+      ACCEPT_EULA: Y
+    ports:
+      - "1433:1433"
+    networks:
+      - my-network
+  
+networks:
+  my-network:
+    driver: bridge
