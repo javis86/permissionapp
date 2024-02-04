@@ -38,7 +38,7 @@ public class PermissionTests
     {
         // Arrange
         var permission = new PermissionType("Account").RequestFor(new Employee());
-        permission.Denied();
+        permission.Deny();
 
         // Act
         Action action = () => permission.Grant();
@@ -53,7 +53,7 @@ public class PermissionTests
         var permission = new PermissionType("Account").RequestFor(new Employee());
 
         // Act
-        permission.Denied();
+        permission.Deny();
 
         permission.Status.Should().Be(Status.Denied);
     }

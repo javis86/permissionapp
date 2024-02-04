@@ -4,5 +4,6 @@ namespace PermissionApp.Commands;
 
 public class RequestPermissionCommand : IRequest<bool>
 {
-    // Propiedades del comando
+    public Guid PermissionTypeId { get; set; }
+    public Guid EmployeeId { get; set; }
 }

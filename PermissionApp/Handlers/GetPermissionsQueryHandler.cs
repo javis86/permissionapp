@@ -1,21 +1,26 @@
+using AutoMapper;
 using MediatR;
-using PermissionApp.Models;
+using Microsoft.EntityFrameworkCore;
+using PermissionApp.Domain;
+using PermissionApp.Infrastructure;
 
 namespace PermissionApp.Handlers;
 
-public class GetPermissionsQueryHandler : IRequestHandler<GetPermissionsQuery, List<PermissionDto>>
+public class GetPermissionsQueryHandler : IRequestHandler<GetPermissionsQuery, Employee?>
 {
-    public Task<List<PermissionDto>> Handle(GetPermissionsQuery request, CancellationToken cancellationToken)
-    {
-        // Lógica para obtener la lista de permisos
-        // Devuelve la lista de permisos
-        var permissions = new List<PermissionDto>
-        {
-            new PermissionDto { /* Propiedades del primer permiso */ },
-            new PermissionDto { /* Propiedades del segundo permiso */ },
-            // Agrega más permisos según sea necesario
-        };
+    private readonly AppDbContext _dbContext;
+    private readonly IMapper _mapper;
 
-        return Task.FromResult(permissions);
+    public GetPermissionsQueryHandler(AppDbContext dbContext, IMapper mapper)
+    {
+        _dbContext = dbContext;
+        _mapper = mapper;
     }
+
+    
+    public async Task<Employee?> Handle(GetPermissionsQuery request, CancellationToken cancellationToken) =>
+        await _dbContext.Employees.Include(x => x.Permissions)
+            .ThenInclude(x => x.PermissionType)
+            .Where(x => x.Id == request.EmployeeId)
+            .FirstOrDefaultAsync();
 }

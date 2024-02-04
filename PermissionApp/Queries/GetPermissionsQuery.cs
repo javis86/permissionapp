@@ -1,7 +1,7 @@
 using MediatR;
-using PermissionApp.Models;
+using PermissionApp.Domain;
 
-public class GetPermissionsQuery : IRequest<List<PermissionDto>>
+public class GetPermissionsQuery : IRequest<Employee?>
 {
-    // Propiedades de la consulta
+    public Guid EmployeeId { get; set; }
 }

@@ -1,12 +1,16 @@
+using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using PermissionApp;
 using PermissionApp.Commands;
 using PermissionApp.Infrastructure;
+using PermissionApp.Models;
 using Serilog;
 using ILogger = Serilog.ILogger;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddAutoMapper(typeof(MapperProfile));
 
 builder.Services.AddMediatR(configuration =>
 {
@@ -33,7 +37,6 @@ using (var scope = app.Services.CreateScope())
     
     context.Database.EnsureDeleted();
     context.Database.EnsureCreated();
-   
     DbInitializer.Initialize(context);
 }
 
@@ -51,11 +54,10 @@ app.MapPost("/ModifyPermission", async (IMediator mediator, ILogger logger, Modi
     return Results.Ok(result);
 });
 
-app.MapGet("/GetPermissions", async (IMediator mediator, ILogger logger) =>
+app.MapPost("/GetPermissions", async (IMediator mediator, ILogger logger, IMapper mapper, GetPermissionsQuery query) =>
 {
     logger.Information("Operation Get");
-    var query = new GetPermissionsQuery();
-    var result = await mediator.Send(query);
+    var result = mapper.Map<PermissionsDto>(await mediator.Send(query));
     return Results.Ok(result);
 });
 

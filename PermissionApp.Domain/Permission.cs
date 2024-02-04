@@ -28,7 +28,7 @@ public class Permission
         _status = Status.Granted;
     }
 
-    public void Denied()
+    public void Deny()
     {
         _status = Status.Denied;
     }
