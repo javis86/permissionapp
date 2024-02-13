@@ -11,8 +11,6 @@ services:
     depends_on:
       - sql-server
       - kafka
-#    networks:
-#      - my-network
     environment:
       - ConnectionStrings__DefaultConnection=Server=sql-server,1433;Database=permissiondb;User Id=sa;Password=3mlq5nXG86eL3nF;TrustServerCertificate=true
       - KafkaConfig=kafka:9092
@@ -25,8 +23,6 @@ services:
       ACCEPT_EULA: Y
     ports:
       - "1433:1433"
-#    networks:
-#      - my-network
         
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -35,8 +31,6 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - 22181:2181
-#    networks:
-#      - my-network
       
   kafka:
     image: confluentinc/cp-kafka:latest
@@ -52,16 +46,12 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-#    networks:
-#      - my-network
   
   init-kafka:
     image: confluentinc/cp-kafka:latest
     depends_on:
       - kafka
     entrypoint: [ '/bin/sh', '-c' ]
-#    networks:
-#      - my-network
     command: |
       "
       # blocks until kafka is reachable
@@ -74,18 +64,15 @@ services:
       echo -e 'Successfully created the following topics:'
       kafka-topics --bootstrap-server kafka:9092 --list
       "
-  
-  kafka-explorer:
-    image: qvantel/kafka-explorer:0.9.3
+
+  kafkacat:
+    image: edenhill/kcat:1.7.0
     depends_on:
       - kafka
-    ports:
-      - 5000:5000
-    environment:
-      KAFKA_BOOTSTRAP_BROKERS: kafka:9092
-#    networks:
-#      - my-network    
-#      
-#networks:
-#  my-network:
-#    driver: bridge
+    entrypoint: [ '/bin/sh', '-c' ]
+    command: |
+      "
+      # 
+      sleep 10s
+      kcat -b kafka:9092 -C -t permission-history -f '\nValue (%S bytes): %s\n\Partition: %p\tOffset: %o\n--\n'     
+      "
