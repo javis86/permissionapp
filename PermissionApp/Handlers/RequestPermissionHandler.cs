@@ -11,18 +11,13 @@ namespace PermissionApp.Handlers;
 public class RequestPermissionHandler : IRequestHandler<RequestPermissionCommand, bool>
 {
     private readonly AppDbContext _dbContext;
-    private readonly ITopicProducer<KafkaMessage> _producerMs;
-
-    private readonly IProducer<Null, string> _producerMS;
-    // private readonly ITopicProducer<KafkaMessage> _producer;
+    private readonly ITopicProducer<KafkaMessage> _kafkaProducer;
 
     public RequestPermissionHandler(AppDbContext dbContext,
-        //IProducer<Null, string> producer,
-        ITopicProducer<KafkaMessage> producerMs)
+        ITopicProducer<KafkaMessage> kafkaProducer)
     {
         _dbContext = dbContext;
-        _producerMs = producerMs;
-        //_producer = producer;
+        _kafkaProducer = kafkaProducer;
     }
 
 
@@ -42,15 +37,12 @@ public class RequestPermissionHandler : IRequestHandler<RequestPermissionCommand
         await _dbContext.Permissions.AddAsync(newRequestedPermission, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-
-        // Confluent.Kafka
-        // await _producer.ProduceAsync("permission-history",
-        //     new Message<Null, string>
-        //     {
-        //         Value = Guid.NewGuid().ToString()
-        //     });
-        
-        await _producerMs.Produce(new KafkaMessage() { Id = Guid.NewGuid() }, cancellationToken);
+        await _kafkaProducer.Produce(
+            new KafkaMessage()
+            {
+                Id = Guid.NewGuid(),
+                NameOperation = "request"
+            }, cancellationToken);
 
         return true;
     }

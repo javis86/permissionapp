@@ -1,9 +1,5 @@
-using System.Net;
 using AutoMapper;
-using Confluent.Kafka;
 using MassTransit;
-// using MassTransit;
-// using MassTransit.Futures;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using PermissionApp;
@@ -28,10 +24,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-// IPHostEntry Host = await Dns.GetHostEntryAsync("kafka");
-// Console.WriteLine($"kafka url is {Host.AddressList[0]}");
-
-// builder.Services.AddKafkaClient();
 builder.Services.AddMassTransit(x =>
 {
     x.UsingInMemory();
