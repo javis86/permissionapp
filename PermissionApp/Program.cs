@@ -1,4 +1,5 @@
 using AutoMapper;
+using Elastic.Clients.Elasticsearch;
 using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -35,6 +36,10 @@ builder.Services.AddMassTransit(x =>
         rider.UsingKafka((context, k) => { k.Host( builder.Configuration.GetSection("KafkaConfig").Get<string>()); });
     });
 });
+
+builder.Services.AddSingleton<ElasticsearchClient>(provider =>
+    new ElasticsearchClient(new Uri(builder.Configuration.GetSection("ElasticsearchConfig").Get<string>())));
+
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

@@ -1,4 +1,5 @@
 using Confluent.Kafka;
+using Elastic.Clients.Elasticsearch;
 using MassTransit;
 using MediatR;
 using PermissionApp.Commands;
@@ -12,14 +13,25 @@ public class RequestPermissionHandler : IRequestHandler<RequestPermissionCommand
 {
     private readonly AppDbContext _dbContext;
     private readonly ITopicProducer<KafkaMessage> _kafkaProducer;
+    private readonly ElasticsearchClient _elasticsearchClient;
 
     public RequestPermissionHandler(AppDbContext dbContext,
-        ITopicProducer<KafkaMessage> kafkaProducer)
+        ITopicProducer<KafkaMessage> kafkaProducer, 
+        ElasticsearchClient elasticsearchClient)
     {
         _dbContext = dbContext;
         _kafkaProducer = kafkaProducer;
+        _elasticsearchClient = elasticsearchClient;
     }
 
+
+    public record PermissionESTypeDto(int Id, Guid EmployeeID, Guid PermissionTypeId, Status Status)
+    {
+        public override string ToString()
+        {
+            return $"{{ Id = {Id}, EmployeeID = {EmployeeID}, PermissionTypeId = {PermissionTypeId}, Status = {Status} }}";
+        }
+    }
 
     public async Task<bool> Handle(RequestPermissionCommand request, CancellationToken cancellationToken)
     {
@@ -43,6 +55,19 @@ public class RequestPermissionHandler : IRequestHandler<RequestPermissionCommand
                 Id = Guid.NewGuid(),
                 NameOperation = "request"
             }, cancellationToken);
+       
+
+        var permissionIndex = new PermissionESTypeDto(newRequestedPermission.Id,
+            newRequestedPermission.Employee.Id,
+            newRequestedPermission.PermissionType.Id,
+            newRequestedPermission.Status);
+
+        var response = await _elasticsearchClient.IndexAsync(permissionIndex, "permission-index");
+
+        if (response.IsValidResponse)
+        {
+            Console.WriteLine($"Index document with ID {response.Id} succeeded.");
+        }
 
         return true;
     }
