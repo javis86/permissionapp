@@ -11,9 +11,9 @@ public class PermissionType
     {
     }
 
-    public PermissionType(string name)
+    public PermissionType(string name, Guid id)
     {
-        _id = Guid.NewGuid();
+        _id = id;
         _name = name;
     }
 

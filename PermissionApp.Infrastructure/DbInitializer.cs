@@ -9,8 +9,8 @@ public static class DbInitializer
     {
         Employee?[] employees = new[]
         {
-            new Employee() { Name = "Jhon", Surname = "Doe"},
-            new Employee() { Name = "Maria", Surname = "Speer"}
+            new Employee() { Id = new Guid("32388767-97d2-48c0-7ab2-08dc2bd9c05d"), Name = "Jhon", Surname = "Doe"},
+            new Employee() { Id = new Guid("572ac435-a418-46a8-7ab3-08dc2bd9c05d"), Name = "Maria", Surname = "Speer"}
         };
         
         context.Employees.AddRange(employees);
@@ -18,14 +18,14 @@ public static class DbInitializer
         Console.WriteLine("--------------------------------------------------------------");
         foreach (var employee in employees)
         {
-            Console.WriteLine($@"Employee {employee.Id} - {employee.Name} {employee.Name}");    
+            Console.WriteLine($@"Employee {employee.Id} - {employee.Name} {employee.Surname}");    
         }
 
         var permissionTypes = new[]
         {
-            new PermissionType("Account Information"),
-            new PermissionType("Finance Information"),
-            new PermissionType("User History Information")
+            new PermissionType("Account Information", new Guid("572ac435-a418-46a8-7ab3-08dc2bd9c05d")),
+            new PermissionType("Finance Information", new Guid("b4236f80-4364-4e5c-81e7-70bda04acb06")),
+            new PermissionType("User History Information", new Guid("106c5c61-70ef-42f8-8a8e-1c689a4d73f5"))
         };
         context.PermissionTypes.AddRange(permissionTypes);
         
