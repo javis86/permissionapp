@@ -2,6 +2,7 @@ using Confluent.Kafka;
 using Elastic.Clients.Elasticsearch;
 using MassTransit;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using PermissionApp.Commands;
 using PermissionApp.Contracts;
 using PermissionApp.Domain;
@@ -16,7 +17,7 @@ public class RequestPermissionHandler : IRequestHandler<RequestPermissionCommand
     private readonly ElasticsearchClient _elasticsearchClient;
 
     public RequestPermissionHandler(AppDbContext dbContext,
-        ITopicProducer<KafkaMessage> kafkaProducer, 
+        ITopicProducer<KafkaMessage> kafkaProducer,
         ElasticsearchClient elasticsearchClient)
     {
         _dbContext = dbContext;
@@ -35,19 +36,31 @@ public class RequestPermissionHandler : IRequestHandler<RequestPermissionCommand
 
     public async Task<bool> Handle(RequestPermissionCommand request, CancellationToken cancellationToken)
     {
-        var permissionType = _dbContext.PermissionTypes.FirstOrDefault(x => x.Id == request.PermissionTypeId);
+        var permission = await _dbContext.Permissions.Include(x => x.Employee).Include(x => x.PermissionType)
+            .FirstOrDefaultAsync(x =>
+                x.Employee.Id == request.EmployeeId && x.PermissionType.Id == request.PermissionTypeId);
 
-        if (permissionType is null)
-            throw new KeyNotFoundException(nameof(PermissionType));
+        if (permission is null)
+        {
+            var permissionType = _dbContext.PermissionTypes.FirstOrDefault(x => x.Id == request.PermissionTypeId);
 
-        var employee = _dbContext.Employees.FirstOrDefault(x => x.Id == request.EmployeeId);
-        if (employee is null)
-            throw new KeyNotFoundException(nameof(Employee));
+            if (permissionType is null)
+                throw new KeyNotFoundException(nameof(PermissionType));
 
-        var newRequestedPermission = permissionType.RequestFor(employee);
+            var employee = _dbContext.Employees.FirstOrDefault(x => x.Id == request.EmployeeId);
+            if (employee is null)
+                throw new KeyNotFoundException(nameof(Employee));
 
-        await _dbContext.Permissions.AddAsync(newRequestedPermission, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+            permission = permissionType.RequestFor(employee);
+
+            await _dbContext.Permissions.AddAsync(permission, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        else
+        {
+            if (permission.Status != Status.Requested)
+                return false;
+        }
 
         await _kafkaProducer.Produce(
             new KafkaMessage()
@@ -55,19 +68,12 @@ public class RequestPermissionHandler : IRequestHandler<RequestPermissionCommand
                 Id = Guid.NewGuid(),
                 NameOperation = "request"
             }, cancellationToken);
-       
 
-        var permissionIndex = new PermissionESTypeDto(newRequestedPermission.Id,
-            newRequestedPermission.Employee.Id,
-            newRequestedPermission.PermissionType.Id,
-            newRequestedPermission.Status);
 
-        var response = await _elasticsearchClient.IndexAsync(permissionIndex, "permission-index");
-
-        if (response.IsValidResponse)
-        {
-            Console.WriteLine($"Index document with ID {response.Id} succeeded.");
-        }
+        await _elasticsearchClient.IndexAsync(new PermissionESTypeDto(permission.Id,
+            permission.Employee.Id,
+            permission.PermissionType.Id,
+            permission.Status), "permission-index");
 
         return true;
     }
