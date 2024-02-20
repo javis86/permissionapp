@@ -14,14 +14,17 @@ public class GetPermissionsQueryHandler : IRequestHandler<GetPermissionsQuery, E
     private readonly AppDbContext _dbContext;
     private readonly ITopicProducer<KafkaMessage> _kafkaProducer;
     private readonly ElasticsearchClient _elasticsearchClient;
+    private readonly IEmployeeRepository _employeeRepository;
 
     public GetPermissionsQueryHandler(AppDbContext dbContext, IMapper mapper,
         ITopicProducer<KafkaMessage> kafkaProducer, 
-        ElasticsearchClient elasticsearchClient)
+        ElasticsearchClient elasticsearchClient, 
+        IEmployeeRepository employeeRepository)
     {
         _dbContext = dbContext;
         _kafkaProducer = kafkaProducer;
         _elasticsearchClient = elasticsearchClient;
+        _employeeRepository = employeeRepository;
     }
     
     public async Task<Employee?> Handle(GetPermissionsQuery request, CancellationToken cancellationToken)
@@ -32,15 +35,12 @@ public class GetPermissionsQueryHandler : IRequestHandler<GetPermissionsQuery, E
                 Id = Guid.NewGuid(),
                 NameOperation = "get"
             }, cancellationToken);
-        
-        var employee = await _dbContext.Employees.Include(x => x.Permissions)
-            .ThenInclude(x => x.PermissionType)
-            .Where(x => x.Id == request.EmployeeId)
-            .FirstOrDefaultAsync(cancellationToken);
 
-        foreach (var permission in employee.Permissions)
+        var employee = await _employeeRepository.GetAsync(request.EmployeeId, cancellationToken);
+
+        foreach (var permission in employee?.Permissions)
         {
-            await _elasticsearchClient.IndexAsync(new RequestPermissionHandler.PermissionESTypeDto(permission.Id,
+            await _elasticsearchClient.IndexAsync(new PermissionESTypeDto(permission.Id,
                 permission.Employee.Id,
                 permission.PermissionType.Id,
                 permission.Status), "permission-index");

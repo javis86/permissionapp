@@ -1,6 +1,7 @@
 using Elastic.Clients.Elasticsearch;
 using MassTransit;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using PermissionApp.Commands;
 using PermissionApp.Contracts;
 using PermissionApp.Domain;
@@ -13,19 +14,27 @@ public class ModifyPermissionHandler : IRequestHandler<ModifyPermissionCommand, 
     private readonly AppDbContext _dbContext;
     private readonly ITopicProducer<KafkaMessage> _kafkaProducer;
     private readonly ElasticsearchClient _elasticsearchClient;
+    private readonly IPermissionRepository _permissionRepository;
+    private IUnitOfWork _unitOfWork;
 
     public ModifyPermissionHandler(AppDbContext dbContext,
         ITopicProducer<KafkaMessage> kafkaProducer, 
-        ElasticsearchClient elasticsearchClient)
+        ElasticsearchClient elasticsearchClient,
+        IPermissionRepository permissionRepository, 
+        IUnitOfWork unitOfWork)
     {
         _dbContext = dbContext;
         _kafkaProducer = kafkaProducer;
         _elasticsearchClient = elasticsearchClient;
+        _permissionRepository = permissionRepository;
+        _unitOfWork = unitOfWork;
     }
     
     public async Task<bool> Handle(ModifyPermissionCommand request, CancellationToken cancellationToken)
     {
-        var permission = _dbContext.Permissions.FirstOrDefault(x => x.PermissionType.Id == request.PermissionTypeId && x.Employee.Id == request.EmployeeId);
+        var permission = await _permissionRepository.GetAsync(request.EmployeeId,
+            request.PermissionTypeId,
+            cancellationToken);
 
         if (permission is null)
             throw new KeyNotFoundException(nameof(Permission));
@@ -38,8 +47,8 @@ public class ModifyPermissionHandler : IRequestHandler<ModifyPermissionCommand, 
                 break;
         }
 
-        _dbContext.Permissions.Update(permission);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        _permissionRepository.Update(permission, cancellationToken);
+        _unitOfWork.SaveChangesAsync(cancellationToken);
         
         await _kafkaProducer.Produce(
             new KafkaMessage()
@@ -48,7 +57,7 @@ public class ModifyPermissionHandler : IRequestHandler<ModifyPermissionCommand, 
                 NameOperation = "modify"
             }, cancellationToken);
         
-        await _elasticsearchClient.IndexAsync(new RequestPermissionHandler.PermissionESTypeDto(permission.Id,
+        await _elasticsearchClient.IndexAsync(new PermissionESTypeDto(permission.Id,
             permission.Employee.Id,
             permission.PermissionType.Id,
             permission.Status), "permission-index");
