@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using PermissionApp.Domain;
-using PermissionApp.Infrastructure;
+using PermissionApp.Handlers;
+using PermissionApp.Infrastructure.Interfaces;
 
-namespace PermissionApp.Handlers;
+namespace PermissionApp.Infrastructure.Repositories;
 
 public class PermissionTypeRepository : IPermissionTypeRepository
 {

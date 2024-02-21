@@ -6,6 +6,7 @@ using PermissionApp.Commands;
 using PermissionApp.Contracts;
 using PermissionApp.Domain;
 using PermissionApp.Handlers;
+using PermissionApp.Infrastructure.Interfaces;
 
 namespace PermissionApp.Tests.UnitTests.Handlers;
 

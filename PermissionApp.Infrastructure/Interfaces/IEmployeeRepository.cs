@@ -1,6 +1,6 @@
 using PermissionApp.Domain;
 
-namespace PermissionApp.Handlers;
+namespace PermissionApp.Infrastructure.Interfaces;
 
 public interface IEmployeeRepository
 {

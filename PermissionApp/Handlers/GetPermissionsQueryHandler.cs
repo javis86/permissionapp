@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using PermissionApp.Contracts;
 using PermissionApp.Domain;
 using PermissionApp.Infrastructure;
+using PermissionApp.Infrastructure.Interfaces;
 
 namespace PermissionApp.Handlers;
 

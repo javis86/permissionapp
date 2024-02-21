@@ -6,7 +6,10 @@ using Microsoft.EntityFrameworkCore;
 using PermissionApp;
 using PermissionApp.Commands;
 using PermissionApp.Contracts;
+using PermissionApp.Handlers;
 using PermissionApp.Infrastructure;
+using PermissionApp.Infrastructure.Interfaces;
+using PermissionApp.Infrastructure.Repositories;
 using PermissionApp.Models;
 using Serilog;
 using ILogger = Serilog.ILogger;
@@ -28,7 +31,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddMassTransit(x =>
 {
     x.UsingInMemory();
-
+    
     x.AddRider(rider =>
     {
         rider.AddProducer<KafkaMessage>("permission-history");
@@ -40,6 +43,10 @@ builder.Services.AddMassTransit(x =>
 builder.Services.AddSingleton<ElasticsearchClient>(provider =>
     new ElasticsearchClient(new Uri(builder.Configuration.GetSection("ElasticsearchConfig").Get<string>())));
 
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IPermissionTypeRepository, PermissionTypeRepository>();
+builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
+builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -88,3 +95,7 @@ app.UseSwaggerUI(options =>
 });
 
 app.Run();
+
+public partial class Program
+{
+}

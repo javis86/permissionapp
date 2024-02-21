@@ -35,6 +35,9 @@ public static class DbInitializer
         }
         Console.WriteLine(@"--------------------------------------------------------------");
         Console.WriteLine();
+
+        var permission1 = permissionTypes[0].RequestFor(employees[0]);
+        context.Permissions.AddAsync(permission1);
         
         context.SaveChanges();
     }
